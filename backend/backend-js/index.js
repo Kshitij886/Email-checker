@@ -1,8 +1,8 @@
 const Imap = require('node-imap');
 
 const imap = new Imap({
-    user: 'kshitiz@tivazo.com',
-    password: 'Kshitiz@123',
+    user: '',
+    password: '',
     host: 'imap.migadu.com',
     port: 993,
     tls: true
