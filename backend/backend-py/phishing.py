@@ -6,14 +6,18 @@ import re
 def check_phishing(links):
     results = {}
     for link in links:
+        extracted_link = tldextract.extract(link)
+        domain = extracted_link.top_domain_under_public_suffix
         score = 0
         score += check_symbols(link)
-        score += check_domain(link)
+        score += check_domain(domain)
         score += regex_match(link)
         score += check_subdomains(link)
         score += check_path_tricks(link)
+        score += check_TLD(domain)
+        
 
-        probability = min(int((score / 50) * 100), 100)
+        probability = min(int((score / 60) * 100), 100)
 
         if probability >= 60:
             print(f" Phishing link: {link}\n   Phishing Probability: {probability}%\n")
@@ -43,13 +47,23 @@ def check_symbols(link: str) -> int:
             score += weight
     if link.startswith("http:"):
         score += 5
+    elif not link.startswith("https:"):
+        score += 10
     return score
 
 
-def check_domain(link):
+def check_domain(domain):
     points = 0
-    extracted_link = tldextract.extract(link)
-    domain = extracted_link.registered_domain
+    if len(domain) > 15 :
+       points += len(domain) - 9
+    elif len(domain) < 5:
+        points += 11 - len(domain) 
+    
+    count = len(domain.split('-'))
+    if count >= 3 :
+       points += count + 2
+    elif 2 <= count < 3:
+       points += 5
     try:
         domain_info = whois.whois(domain)
         if domain_info.creation_date:
@@ -58,12 +72,14 @@ def check_domain(link):
             else:
                 creation_date = domain_info.creation_date
             domain_age = datetime.now() - creation_date
-            if domain_age.days < 30:
-                points += 6
+            if domain_age.days < 20:
+                points += domain_age.days + 12
+            elif domain_age.days < 30:
+                points += 8
             elif 30 <= domain_age.days < 90:
                 points += 4
     except Exception:
-        points += 6
+        points += 8
     return points
 
 
@@ -91,8 +107,11 @@ def check_subdomains(link):
     subdomain = extracted.subdomain
     if subdomain:
         sub_count = len(subdomain.split("."))
-        if sub_count >= 3:
+        if sub_count >= 9:
+            score += sub_count
+        elif sub_count >= 3:
             score += 6
+
         if any(word in subdomain.lower() for word in ["login", "secure", "update", "verify", "paypal", "account"]):
             score += 6
     return score
@@ -100,25 +119,84 @@ def check_subdomains(link):
 
 def check_path_tricks(link):
     score = 0
+    extensions = {
+        ".html": 8,
+        ".htm" : 8,
+        ".php": 8,
+        ".js": 8,
+        ".aspx": 5,
+        ".asp": 5,
+    }
+    for ext, weight in extensions.items():
+        if(link.endswith(ext)):
+            score += weight
     path_match = re.search(r"https?:\/\/[^\/]+(\/[^\s]*)", link)
     if path_match:
         path = path_match.group(1)
-        if len(path) > 50:
+        if len(path) > 65:
+            score += len(path) - 61
+        elif len(path) > 50:
             score += 4
         if any(word in path.lower() for word in ["confirm", "update", "verify", "secure", "signin", "banking", "password", "login"]):
             score += 5
-        if path.count("/") > 5:
-            score += 4
+        if path.count("/") > 6:
+            score += path.count('/') -1
+        
+            score += 5
+
     return score
 
-
+def check_TLD(domain):
+    score = 0
+    TDL = {
+        ".com":1,
+        ".org":1,
+        ".app": 4,
+        ".info":8,
+        ".top":	9,
+        ".xyz":	8,
+        ".ru ": 9,
+        ".cn ":	8,
+        ".php": 7
+    }
+    for tld, weight in TDL.items():
+        if domain.endswith(tld):
+            score += weight
+        if domain.count(tld) > 1:
+            score += 6 * domain.count(tld)
+        elif tld in domain and not domain.endswith(tld):
+            score += weight
+        
+        
+    numbers = len(re.findall(r'\d', domain))
+    if 1 <= numbers <= 2:
+        score += 4
+    elif 3 <= numbers <= 4:
+        score += 7
+    else:  # >4
+        score += 10
+    return score
 # Test
-check_phishing([
-    "https://nouvellelivraison-retrait-locker.com/",
-    "https://nouvellelivraison-retrait-locker.com/pages/index.php...",
-    "https://bauerhockey.top/",
-    "http://bauerhockey.top",
-    "https://straightforward-darling-532744.framer.app/...",
-    "https://commerz-dienstleistungen.com/cmr/",
-    ""
-])
+
+
+links = [
+    # Fake phishing-style URLs (safe)
+    "http://login-secure-example.com",
+    "http://verify-your-account-example.com",
+    "http://update-info-example.com",
+    
+    # Real safe URLs
+    "https://www.google.com",
+    "https://www.wikipedia.org",
+    "https://www.python.org",
+    
+    # More fake phishing-style URLs
+    "http://secure-login-example.com",
+    "http://account-check-example.com",
+    
+    # More real safe URLs
+    "https://www.github.com",
+    "https://www.stackoverflow.com"
+]
+
+check_phishing(links)
