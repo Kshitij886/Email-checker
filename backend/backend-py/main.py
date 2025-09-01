@@ -13,7 +13,11 @@ def check_email():
         data = Request.get_json()
         malware_result = malware.check_malware(data['files']);
         phishing_result = phishing.check_phishing(data['links']);
-        texts_result = texts.check_text(data['body'])
+        if malware_result == True :
+                texts_result = texts.check_text(data['body'], "malware")
+        else :
+                texts_result = texts.check_text(data['body'])
+        
         average = (malware_result + phishing_result + texts_result) / 3
         if( average  >= 5) :
                 return jsonify({"result": "malicious"})
