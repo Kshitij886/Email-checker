@@ -39,7 +39,7 @@ app.use(cors());
       } else if (parsed_message.html) {
         links.push(parsed_message.html.match(url_regrex));
       }
-      const attachment = null
+      let attachment = null
       if (parsed_message.attachments && parsed_message.attachments.length > 0) {
         const firstAttachment = parsed_message.attachments[0];
         attachment = {
@@ -47,14 +47,12 @@ app.use(cors());
           filename: firstAttachment.filename,
         };
       }
-
-      const email = {
-        subject: parsed_message.subject,
+      console.log(parsed_message.text,links)
+      const result = await axios.post("http://127.0.0.1:5000/api/check_email", {
         body: parsed_message.text,
         attachment: attachment, 
         url: links,
-      };
-      const result = await axios.post("http://127.0.0.1:5000/api/check_email", { email });
+      });
       console.log(result);
     });
   } catch (err) {

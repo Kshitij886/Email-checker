@@ -6,6 +6,14 @@ import re
 def check_phishing(links):
     results = {}
     for link in links:
+        if isinstance(link, list):
+            if len(link) == 0:
+                continue  # skip empty lists
+        link = link[0]
+    
+        # Skip None or non-string
+        if not isinstance(link, str):
+            continue
         extracted_link = tldextract.extract(link)
         domain = extracted_link.top_domain_under_public_suffix
         score = 0
