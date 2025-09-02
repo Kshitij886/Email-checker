@@ -1,60 +1,65 @@
-const Imap = require('node-imap');
+const express = require("express");
+const axios = require("axios");
+const { ImapFlow } = require("imapflow");
+const cors = require("cors");
+const { simpleParser } = require("mailparser");
 
-const imap = new Imap({
-    user: '',
-    password: '',
-    host: 'imap.migadu.com',
-    port: 993,
-    tls: true
-});
 
-function openInbox (cb){
-    imap.openBox('INBOX', true, cb)
-}
+const app = express();
+app.use(cors());
 
-imap.once('ready', function() {
-  openInbox(function(err, box) {
-    if (err) throw err;
-    var f = imap.seq.fetch('1:3', {
-      bodies: 'HEADER.FIELDS (FROM TO SUBJECT DATE)',
-      struct: true
-    });
-    f.on('message', function(msg, seqno) {
-      console.log('Message #%d', seqno);
-      var prefix = '(#' + seqno + ') ';
-      console.log(prefix)
-      msg.on('body', function(stream, info) {
-        var buffer = '';
-        stream.on('data', function(chunk) {
-          buffer += chunk.toString('utf8');
-        });
-        stream.once('end', function() {
-          console.log('Parsed header: %s', Imap.parseHeader(buffer));
-        });
-      });
-      msg.once('attributes', function(attrs) {
-        console.log('Attributes: %s', attrs, false, 8);
-      });
-      msg.once('end', function() {
-        console.log(prefix + 'Finished');
-      });
-    });
-    f.once('error', function(err) {
-      console.log('Fetch error: ' + err);
-    });
-    f.once('end', function() {
-      console.log('Done fetching all messages!');
-      imap.end();
-    });
+(async () => {
+  const client = new ImapFlow({
+    host: "imap.migadu.com",
+    secure: true,
+    prot: 993,
+    auth: {
+      user: "kshitiz@tivazo.com",
+      pass: "Kshitiz@123",
+    },
+    logger: false,
   });
-});
 
-imap.once('error', (err) => {
-    console.error('IMAP error:', err);
-});
+  await client.connect();
+  console.log("Connection sucessful");
+  const lock = await client.getMailboxLock("INBOX");
+  try {
+    console.log("Waiting for email to receive....");
+    client.on("exists", async () => {
+      console.log("EMAIL received");
+      const message = await client.fetchOne(client.mailbox.exists, {
+        source: true,
+      });
+      const parsed_message = await simpleParser(message.source);
+      const links = [];
+      const url_regrex =
+        /<?(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])>?/gi;
+      if (parsed_message.text) {
+        links.push(parsed_message.text.match(url_regrex));
+      } else if (parsed_message.html) {
+        links.push(parsed_message.html.match(url_regrex));
+      }
+      const attachment = null
+      if (parsed_message.attachments && parsed_message.attachments.length > 0) {
+        const firstAttachment = parsed_message.attachments[0];
+        attachment = {
+          content: firstAttachment.content, // Buffer
+          filename: firstAttachment.filename,
+        };
+      }
 
-imap.once('end', function(){
-    console.log('connection ended.')
-})
-
-imap.connect();
+      const email = {
+        subject: parsed_message.subject,
+        body: parsed_message.text,
+        attachment: attachment, 
+        url: links,
+      };
+      const result = await axios.post("http://127.0.0.1:5000/api/check_email", { email });
+      console.log(result);
+    });
+  } catch (err) {
+    console.log("Error: ", err.message);
+  } finally {
+    lock.release();
+  }
+})();

@@ -25,37 +25,31 @@ malware_words = [
     "do not ignore", "execute file now"
 ]
 
-def check_text(content, text = 'phishing'):
+def check_text(body, text = 'phishing'):
     if text == 'phishing':
-        count = check_phishingWords(content)
-        return count
-    count = check_malwareWords(content)
-    return count
-    
-    
+        words = check_phishingWords(body)
+        result = {
+            "words" : words
+        }
+        return result
+    words = check_malwareWords(body)
+    result = {
+            "words" : words
+        }
+    return result
 
 def check_phishingWords(content):
-    count = 0
     words = []
     for word in phishing_words:
         if word in content:
             words.append(word)
-            count += 1
-    return count, words
+
+    return words
 
 def check_malwareWords(content):
-    count = 0
     words = []
     for word in malware_words:
         if word in content:
             words.append(word)
-            count += 1
-    return count, words
 
-
-email_text = 'Dear Customer,  Your account has been locked due to unusual activity.To avoid service termination, you must verify your identity immediately.  Click here to confirm your password and update information. Failure to act now will result in restricted access.  Thank you, Security Team'
-
-email_text = email_text.lower()
-result = check_text(email_text)
-
-print (result)
+    return words

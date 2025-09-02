@@ -15,21 +15,20 @@ def check_phishing(links):
         score += check_subdomains(link)
         score += check_path_tricks(link)
         score += check_TLD(domain)
-        
 
         probability = min(int((score / 60) * 100), 100)
-
-        if probability >= 60:
-            print(f" Phishing link: {link}\n   Phishing Probability: {probability}%\n")
-        elif probability >= 50:
-            print(f" Suspicious link: {link}\n   Phishing Probability: {probability}%\n")
-        else:
-            print(f" Safe link: {link}\n   Phishing Probability: {probability}%\n")
-
         results[link] = probability
-    return results
-
-
+    status = False
+    for url, prob in results.items():
+        if prob > 60:
+            status = True
+            break
+    Final_result = {
+        "status" : status,
+        "urls": results.link
+    }
+    return Final_result
+    
 def check_symbols(link: str) -> int:
     score = 0
     if len(link) > 75:
@@ -176,27 +175,3 @@ def check_TLD(domain):
     else:  # >4
         score += 10
     return score
-# Test
-
-
-links = [
-    # Fake phishing-style URLs (safe)
-    "http://login-secure-example.com",
-    "http://verify-your-account-example.com",
-    "http://update-info-example.com",
-    
-    # Real safe URLs
-    "https://www.google.com",
-    "https://www.wikipedia.org",
-    "https://www.python.org",
-    
-    # More fake phishing-style URLs
-    "http://secure-login-example.com",
-    "http://account-check-example.com",
-    
-    # More real safe URLs
-    "https://www.github.com",
-    "https://www.stackoverflow.com"
-]
-
-check_phishing(links)
