@@ -1,12 +1,9 @@
-const express = require("express");
+// const express = require("express");
 const axios = require("axios");
 const { ImapFlow } = require("imapflow");
-const cors = require("cors");
+// const cors = require("cors");
 const { simpleParser } = require("mailparser");
 
-
-const app = express();
-app.use(cors());
 
 (async () => {
   const client = new ImapFlow({
@@ -14,8 +11,8 @@ app.use(cors());
     secure: true,
     prot: 993,
     auth: {
-      user: "kshitiz@tivazo.com",
-      pass: "Kshitiz@123",
+      user: "",
+      pass: "",
     },
     logger: false,
   });
@@ -39,6 +36,7 @@ app.use(cors());
       } else if (parsed_message.html) {
         links.push(parsed_message.html.match(url_regrex));
       }
+      console.log(links)
       let attachment = null
       if (parsed_message.attachments && parsed_message.attachments.length > 0) {
         const firstAttachment = parsed_message.attachments[0];
@@ -47,13 +45,13 @@ app.use(cors());
           filename: firstAttachment.filename,
         };
       }
-      console.log(parsed_message.text,links)
-      const result = await axios.post("http://127.0.0.1:5000/api/check_email", {
-        body: parsed_message.text,
-        attachment: attachment, 
-        url: links,
-      });
-      console.log(result);
+      console.log(attachment)
+       const result = await axios.post("http://127.0.0.1:5000/api/check_email", {
+         body: parsed_message.text,
+         attachment: attachment, 
+         url: links,
+       });
+       console.log(result.data);
     });
   } catch (err) {
     console.log("Error: ", err.message);
@@ -61,3 +59,5 @@ app.use(cors());
     lock.release();
   }
 })();
+
+

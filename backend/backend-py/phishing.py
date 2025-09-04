@@ -5,15 +5,7 @@ import re
 
 def check_phishing(links):
     results = {}
-    for link in links:
-        if isinstance(link, list):
-            if len(link) == 0:
-                continue  # skip empty lists
-        link = link[0]
-    
-        # Skip None or non-string
-        if not isinstance(link, str):
-            continue
+    for link in links[0]:
         extracted_link = tldextract.extract(link)
         domain = extracted_link.top_domain_under_public_suffix
         score = 0
@@ -31,11 +23,11 @@ def check_phishing(links):
         if prob > 60:
             status = True
             break
-    Final_result = {
+    print(results)
+    return {
         "status" : status,
-        "urls": results.link
+        "urls": results
     }
-    return Final_result
     
 def check_symbols(link: str) -> int:
     score = 0
