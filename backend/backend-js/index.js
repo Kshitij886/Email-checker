@@ -11,7 +11,7 @@ const { simpleParser } = require("mailparser");
     secure: true,
     prot: 993,
     auth: {
-      user: "",
+      user: "sakshyam@tivazo.com",
       pass: "",
     },
     logger: false,
