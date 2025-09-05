@@ -11,8 +11,8 @@ const { simpleParser } = require("mailparser");
     secure: true,
     prot: 993,
     auth: {
-      user: "sakshyam@tivazo.com",
-      pass: "",
+      user: "kshitiz@tivazo.com",
+      pass: "Kshitiz@123",
     },
     logger: false,
   });
@@ -36,7 +36,6 @@ const { simpleParser } = require("mailparser");
       } else if (parsed_message.html) {
         links.push(parsed_message.html.match(url_regrex));
       }
-      console.log(links)
       let attachment = null
       if (parsed_message.attachments && parsed_message.attachments.length > 0) {
         const firstAttachment = parsed_message.attachments[0];
@@ -45,13 +44,27 @@ const { simpleParser } = require("mailparser");
           filename: firstAttachment.filename,
         };
       }
-      console.log(attachment)
-       const result = await axios.post("http://127.0.0.1:5000/api/check_email", {
+      try {
+        const result = await axios.post("http://127.0.0.1:5000/api/check_email", {
          body: parsed_message.text,
          attachment: attachment, 
          url: links,
        });
-       console.log(result.data);
+       if( result.data.status == true){
+        await client.messageMove(client.mailbox.exists, "Trash")
+        console.log("Corrupt email detected and moved to trash.")
+        console.log(result.data)
+        console.log('Waiting for new email...')
+       }else{
+        console.log(result.data)
+        console.log('Waiting for new email...')
+       }
+        
+      } catch (error) {
+        console.log("Error ", error.message)
+        
+      }
+       
     });
   } catch (err) {
     console.log("Error: ", err.message);

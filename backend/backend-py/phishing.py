@@ -3,6 +3,18 @@ import whois
 from datetime import datetime
 import re
 
+TRUSTED_DOMAINS = [
+    "slack.com", "microsoft.com", "google.com", "zoom.us", "github.com",
+    "dropbox.com", "salesforce.com", "notion.so"
+]
+suspicious_symbols = {
+        "@": 4, "-": 2, ".": 2, "_": 2, "%": 1, "#": 2, "&": 1,
+        "*": 2, "(": 2, ")": 2, "!": 2, "$": 1, "~": 3, "`": 3,
+        "=": 2, "+": 2, ";": 2, ":": 2
+}
+
+symbols = ['-', '_', '$', '&', '!', '@']
+
 def check_phishing(links):
     results = {}
     for link in links[0]:
@@ -17,13 +29,16 @@ def check_phishing(links):
         score += check_TLD(domain)
 
         probability = min(int((score / 60) * 100), 100)
+        if domain in TRUSTED_DOMAINS and not any(symbol in domain for symbol in symbols):
+            probability = probability // 3
         results[link] = probability
-    status = False
+    status = "False"
     for url, prob in results.items():
-        if prob > 60:
-            status = True
+        if prob > 50:
+            status = "True"
             break
-    print(results)
+        elif prob > 35:
+            status = "Suspicious"
     return {
         "status" : status,
         "urls": results
@@ -33,11 +48,6 @@ def check_symbols(link: str) -> int:
     score = 0
     if len(link) > 75:
         score += 2
-    suspicious_symbols = {
-        "@": 6, "-": 3, ".": 3, "_": 3, "%": 3, "#": 3, "&": 3,
-        "*": 3, "(": 3, ")": 3, "!": 3, "$": 3, "~": 3, "`": 3,
-        "=": 2, "+": 2, ";": 2, ":": 2
-    }
     for symbol, weight in suspicious_symbols.items():
         count = link.count(symbol)
         if symbol in [".", "-"] and count > 3:
@@ -140,8 +150,6 @@ def check_path_tricks(link):
             score += 5
         if path.count("/") > 6:
             score += path.count('/') -1
-        
-            score += 5
 
     return score
 

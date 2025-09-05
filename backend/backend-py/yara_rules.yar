@@ -95,4 +95,49 @@ rule hack_tool {
         )
 }
 
+rule malware
+{
+    meta:
+        description = "malware"
+        author = "kshitij khatri"
+
+    strings:
+        // Virus patterns
+        $virus1 = "malicious.exe"
+        $virus2 = "infected" wide
+
+        // Spyware patterns
+        $spy1 = "keylogger"
+        $spy2 = "steal_credentials"
+
+        // Hack tool patterns
+        $hack1 = "exploit_code"
+        $hack2 = "remote_shell"
+
+        // Trojan/Ransomware
+        $trojan1 = "payload.dll"
+        $trojan2 = "dropper"
+        $ransom1 = "encrypt_files"
+        $ransom2 = "decrypt_key"
+
+        // Adware/Backdoor
+        $adware1 = "ad_display"
+        $adware2 = "pop_up"
+        $backdoor1 = "remote_access"
+        $backdoor2 = "cmd_exec"
+
+        // Botnet / Credential stealers
+        $bot1 = "C2_server"
+        $bot2 = "bot_register"
+        $cred1 = "password.txt"
+        $cred2 = "login_data"
+
+        // Keylogger
+        $key1 = "keystroke"
+        $key2 = "keyboard_hook"
+
+    condition:
+        any of them
+}
+
 

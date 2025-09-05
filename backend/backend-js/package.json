@@ -13,6 +13,7 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "imapflow": "^1.0.195",
-    "mailparser": "^3.7.4"
+    "mailparser": "^3.7.4",
+    "nodemon": "^3.1.10"
   }
 }

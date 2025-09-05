@@ -15,35 +15,36 @@ def check_email():
         phishing_result = None
         if "attachment" in data and data["attachment"] is not None:
                 malware_result = malware.check_malware(data['attachment'])
-        if 'url' in data and data['url'] != []:
+        if 'url' in data and data['url'] != [None]:
                 phishing_result = phishing.check_phishing(data['url'])
-        
-        if  malware_result is not None:
-                texts_result = texts.check_text(data['body'], "malware")
-        else :
-                texts_result = texts.check_text(data['body'])
 
-        if malware_result is not None and phishing_result is not None:
+        texts_result = texts.check_text(data['body'])
+        if malware_result is not None and phishing_result is not None and phishing_result['status'] != "False" and malware_result['status'] != False:
                 result = {
-                        "malware ": True,
-                        "phishing": True,
+                        "status": True,
+                        "malware ": malware_result['status'],
+                        "phishing": phishing_result['status'],
                         "file" : malware_result['file'],
                         "urls" : phishing_result['urls'],
+                        "malware_type" : malware_result['malware type'],
                         "Suspicious words" : texts_result['words']
                 }
                 return jsonify(result)
         
-        elif malware_result is not None and phishing_result is None:
+        elif malware_result is not None and phishing_result is None and malware_result['status'] !='False' :
                 result = {
-                        "malware ": True,
+                        "status": True,
+                        "malware ": malware_result['status'],
                         "phishing": False,
                         "file" : malware_result['file'],
+                        "malware_type" : malware_result['malware type'],
                         "Suspicious words" : texts_result['words']
                 }
                 return jsonify(result)
-        elif phishing_result is not None :
+        elif phishing_result is not None and phishing_result['status'] != "False":
                 result = {
-                        "phishing": True,
+                        "status": True,
+                        "phishing": phishing_result['status'],
                         "malware" : False,
                         "urls" : phishing_result['urls'],
                         "suspicious words" : texts_result['words']
@@ -51,6 +52,7 @@ def check_email():
                 return jsonify(result)
         else:
                 result = {
+                        "status": False,
                         "phishing": False,
                         "malware": False,
                         "email" : "safe"
