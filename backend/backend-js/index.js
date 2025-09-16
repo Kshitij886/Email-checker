@@ -50,7 +50,8 @@ const { simpleParser } = require("mailparser");
          attachment: attachment, 
          url: links,
        });
-       if( result.data.status == true){
+       if( result.data.status == true){y
+    
         await client.messageMove(client.mailbox.exists, "Trash")
         console.log("Corrupt email detected and moved to trash.")
         console.log(result.data)
