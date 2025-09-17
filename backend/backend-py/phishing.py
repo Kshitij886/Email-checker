@@ -17,7 +17,7 @@ symbols = ['-', '_', '$', '&', '!', '@']
 
 def check_phishing(links):
     results = {}
-    for link in links[0]:
+    for link in links:
         extracted_link = tldextract.extract(link)
         domain = extracted_link.top_domain_under_public_suffix
         score = 0

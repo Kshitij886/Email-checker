@@ -1,8 +1,28 @@
 import React from "react";
 import { useEffect, useState } from "react";
+import axios from 'axios'
 
 function App() {
-const [currentDate, setCurrentDate] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
+  const [firewall, setFirewall] = useState(true);
+  const [statusF, setStatusF] = useState(false)
+  
+  const button = async () => {
+    setFirewall(!firewall)
+    setStatusF(!statusF)
+    localStorage.setItem("status", statusF)
+    console.log(firewall)
+    try {
+      const response = await axios.post('http://localhost:5000/api-firewall',{status :firewall});
+    } catch (error) {
+      console.log('Error: ', error.message)
+    }
+
+  }
+  useEffect(() => {
+    const ButtonStatus = localStorage.getItem('status');
+    setStatusF(ButtonStatus)
+  },[])
 
   useEffect(() => {
     const updateDate = () => {
@@ -71,7 +91,7 @@ const [currentDate, setCurrentDate] = useState('');
       <div className="w-auto h-auto m-0 ">
         <div className="ml-5  bg-[#4a21a2] rounded-full flex items-center justify-center h-12 w-40 p-2">
           <label className="inline-flex items-center cursor-pointer">
-            <input type="checkbox" value="" className="sr-only peer" />
+            <input type="checkbox" value="" className="sr-only peer" onClick={button} checked = {statusF}/>
             <div className="relative w-14 h-7 bg-[#26175C] rounded-full dark:bg-[#26175C] peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
             <span className="ms-3 text-lg font-semibold font-sans text-white">
               Enable

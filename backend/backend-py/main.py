@@ -13,9 +13,10 @@ def check_email():
         data = request.get_json()
         malware_result = None
         phishing_result = None
+        print(data['url'])
         if "attachment" in data and data["attachment"] is not None:
                 malware_result = malware.check_malware(data['attachment'])
-        if 'url' in data and data['url'] != [None]:
+        if 'url' in data and data['url'] == []:
                 phishing_result = phishing.check_phishing(data['url'])
 
         texts_result = texts.check_text(data['body'])
