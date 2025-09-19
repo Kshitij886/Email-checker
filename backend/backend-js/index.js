@@ -10,7 +10,6 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-// Global variables for IMAP client and mailbox lock
 let client = null;
 let lock = null;
 let listening = false;
